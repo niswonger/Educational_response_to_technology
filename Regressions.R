@@ -14,6 +14,7 @@ dt.census_cty  <- dt.census_exp[,list(exp = sum(PERWT*tech_pred)/sum(PERWT), w =
 dt.census_cty <- merge(dt.census_cty, dt.state[,list(Fips, state = STATE_NAME)], by = 'Fips')
 # Choose education data to add
 dt.edu <- dt.cty_agg[cip %in% c(0,99000)]
+# Pull education data if available
 dt.edu[, main_row := cip == max(cip), by = list(state, fipscty)]
 dt.edu <- dt.edu[main_row == T,list(state, fipscty, pop_adj, num_adj, frac_num)]
 # Merge
@@ -98,7 +99,7 @@ ggplot(dt.results, aes(bins, est))+geom_point()+ geom_line() +
   geom_hline(yintercept = 0)
 
 
-# doube check if we get the same results using the college population statistics 
+# doube check if we get the same results using the college population statistics from the census
 l.model_2 <- lm(exp_growth ~ frac_col + pop_adj+ exp, dt.census_edu_1980_2000[YEAR == 1980],weights=dt.census_edu_1980_2000[YEAR == 1980 ]$pop_adj)
 l.model_3 <- lm(growth ~ frac_col + pop_adj+exp, dt.census_edu_1980_2000[!is.na(growth)& !is.na(quantile_exposure)],
                 weights=dt.census_edu_1980_2000[!is.na(growth)& !is.na(quantile_exposure)]$pop_adj)

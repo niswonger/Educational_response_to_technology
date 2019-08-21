@@ -105,6 +105,10 @@ dt.cty_wage_exp <- dt.census_exp[YEAR %in% c(1980,2000) & COUNTYFIP != 0,
 dt.cty_wage_exp[order(YEAR), del_w := log(shift(w,-1)) - log(w), by = list(Fips, fipscty)]
 dt.cty_wage_exp[, exp := exp/sd(exp), by = list(YEAR)]
 # Regress 
+l.model <- lm(del_w~exp + age + w + frac_col + frac_man + frac_trans + frac_trade + frac_public + frac_young + frac_old
+              , dt.cty_wage_exp, weights = dt.cty_wage_exp$emp)
+summary(l.model)
+xtable(l.model, digits = 3)
 l.model <- lm(del_w~exp + age + w + frac_col + frac_man + frac_trans + frac_trade + frac_public + frac_young + frac_old + as.factor(Fips)
               , dt.cty_wage_exp, weights = dt.cty_wage_exp$emp)
 summary(l.model)
@@ -156,9 +160,10 @@ summary(l.model)
 xtable(l.model)
 
 # Adding Controls
-
-l.model <- lm(del_comp ~ exp + total + age + w + frac_col + frac_man + frac_trans + frac_trade + frac_public + frac_young + frac_old + as.factor(Fips), dt.col_deg_exp )
 l.model <- lm(del_comp ~ exp + total + age + w + frac_col + frac_man + frac_trans + frac_trade + frac_public + frac_young + frac_old, dt.col_deg_exp )
+summary(l.model)
+xtable(l.model)
+l.model <- lm(del_comp ~ exp + total + age + w + frac_col + frac_man + frac_trans + frac_trade + frac_public + frac_young + frac_old + as.factor(Fips), dt.col_deg_exp )
 summary(l.model)
 xtable(l.model)
 
@@ -343,30 +348,28 @@ dt.reg <- dt.col_deg_exp_8499[abs(comp_int)!=Inf & abs(total_int)!=Inf & abs(tot
 dt.reg[,exp := (exp-mean(exp))/sd(exp)]
 # Run regressions
 l.model <- lm(comp_int ~ exp*comp_1980, data = dt.reg )
-l.model <- lm(comp_int ~ exp*comp_1980+ age + w + frac_col + frac_man + frac_trans + frac_trade + frac_public + frac_young + frac_old + as.factor(Fips), 
+l.model_c <- lm(comp_int ~ exp*comp_1980+ age + w + frac_col + frac_man + frac_trans + frac_trade + frac_public + frac_young + frac_old, 
               data = dt.reg )
 summary(l.model)
 xtable(l.model)
+summary(l.model_c)
+xtable(l.model_c)
 
 l.model <- lm(total_int ~ exp*total_1980, data = dt.reg )
-l.model <- lm(total_int ~ exp*total_1980 + age + w + frac_col + frac_man + frac_trans + frac_trade + frac_public + frac_young + frac_old + as.factor(Fips), 
+l.model_c <- lm(total_int ~ exp*total_1980 + age + w + frac_col + frac_man + frac_trans + frac_trade + frac_public + frac_young + frac_old, 
               data = dt.reg )
 summary(l.model)
 xtable(l.model)
+summary(l.model_c)
+xtable(l.model_c)
 
 l.model <- lm(comp_int ~ exp*comp_1980 + exp*total_1980, data = dt.reg )
-l.model <- lm(comp_int ~ exp*comp_1980 + exp*total_1980+ age + w + frac_col + frac_man + frac_trans + frac_trade + frac_public + frac_young + frac_old, 
-              data = dt.reg )
-l.model <- lm(comp_int ~ exp*comp_1980 + exp*total_1980+ age + w + frac_col + frac_man + frac_trans + frac_trade + frac_public + frac_young + frac_old + as.factor(Fips), 
+l.model_c <- lm(comp_int ~ exp*comp_1980 + exp*total_1980+ age + w + frac_col + frac_man + frac_trans + frac_trade + frac_public + frac_young + frac_old, 
               data = dt.reg )
 summary(l.model)
 xtable(l.model)
-
-# l.model <- lm(comp_int ~ exp*total_1980, data = dt.reg )
-# l.model <- lm(comp_int ~ exp*comp_1980 + exp*total_1980+ age + w + frac_col + frac_man + frac_trans + frac_trade + frac_public + frac_young + frac_old + as.factor(Fips), 
-#               data = dt.reg )
-# summary(l.model)
-# xtable(l.model)
+summary(l.model_c)
+xtable(l.model_c)
 
 ggplot(dt.reg, aes(exp, comp_int, color = 'Comp'))+geom_point()+ geom_smooth(method = "lm") +
   geom_point(data = dt.reg, aes(exp, total_int, color = 'Total'))+geom_smooth(method = "lm",aes(exp, total_int, color = 'Total')) +
