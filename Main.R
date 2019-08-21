@@ -10,6 +10,8 @@ library(survey)
 library(AER)
 library(bit64)
 library(zoo)
+
+# TEst
 ############################### Step 1: Get occupational exposure to computer #############################
 # Run script to generate dt.occ_exp which has occupational information and computer exposure 
 source('~/Scripts/response_to_tech_with_educational_constraints/getTechnologyExposure.R')
