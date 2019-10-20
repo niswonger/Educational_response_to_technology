@@ -3,6 +3,7 @@
 ################################################################################################   
 # Bring in data from main: dt.census_exp, dt.state, dt.edu, dt.cty, dt.cty_agg
 
+setwd('~/Documents/Harvard/Research/College_Response')
 source('~/Scripts/response_to_tech_with_educational_constraints/Main.R')
 
 ################################ Step 4: Merge data and Regress ################################## 
@@ -28,10 +29,10 @@ ggplot(dt.census_edu , aes(frac_col,frac_num))+ geom_point()+
 
 # Get changes over the period
 dt.census_edu_1980_2000 <- dt.census_edu[YEAR %in% c(1980, 2000)]
-dt.census_edu_1980_2000[order(YEAR), growth:= shift(log(emp),-1)-log((emp)), by = list(state, fipscty)]
-dt.census_edu_1980_2000[order(YEAR), exp_growth:= shift(log(exp),-1)-log((exp)), by = list(state, fipscty)]
-dt.census_edu_1980_2000[order(YEAR), w_growth:= shift(log(w),-1)-log((w)), by = list(state, fipscty)]
-dt.census_edu_1980_2000[order(YEAR), col_growth:= shift(log(frac_col),-1)-log((frac_col)), by = list(state, fipscty)]
+dt.census_edu_1980_2000[order(YEAR), growth:= shift(log(emp),1,type = 'lead')-log((emp)), by = list(state, fipscty)]
+dt.census_edu_1980_2000[order(YEAR), exp_growth:= shift(log(exp),1,type = 'lead')-log((exp)), by = list(state, fipscty)]
+dt.census_edu_1980_2000[order(YEAR), w_growth:= shift(log(w),1,type = 'lead')-log((w)), by = list(state, fipscty)]
+dt.census_edu_1980_2000[order(YEAR), col_growth:= shift(log(frac_col),1,type = 'lead')-log((frac_col)), by = list(state, fipscty)]
 ############ Make some country graphs #############
 library(usmap)
 dt.census_edu_1980_2000[,fips := paste0(ifelse(nchar(Fips )==1,paste0('0',Fips ),Fips ),
@@ -189,24 +190,25 @@ ggplot(dt.census_edu , aes(frac_col,frac_num))+ geom_point()+
 
 # Get changes over the period
 dt.census_edu_1980_2000 <- dt.census_edu[YEAR %in% c(1980, 2000)]
-dt.census_edu_1980_2000[order(YEAR), growth:= shift(log(emp),-1)-log((emp)), by = list(state, fipscty)]
-dt.census_edu_1980_2000[order(YEAR), exp_growth:= shift(log(exp),-1)-log((exp)), by = list(state, fipscty)]
-dt.census_edu_1980_2000[order(YEAR), w_growth:= shift(log(w),-1)-log((w)), by = list(state, fipscty)]
-dt.census_edu_1980_2000[order(YEAR), col_growth:= shift(log(frac_col),-1)-log((frac_col)), by = list(state, fipscty)]
+dt.census_edu_1980_2000[order(YEAR), growth:= shift(log(emp),1,type = 'lead')-log((emp)), by = list(state, fipscty)]
+dt.census_edu_1980_2000[order(YEAR), exp_growth:= shift(log(exp),1,type = 'lead')-log((exp)), by = list(state, fipscty)]
+dt.census_edu_1980_2000[order(YEAR), w_growth:= shift(log(w),1,type = 'lead')-log((w)), by = list(state, fipscty)]
+dt.census_edu_1980_2000[order(YEAR), col_growth:= shift(log(frac_col),1,type = 'lead')-log((frac_col)), by = list(state, fipscty)]
 
 
 # pick number of bins 
 bins <- 4
 dt.census_edu_1980_2000[YEAR == 1980,quantile_exposure := findInterval(exp, quantile(exp, na.rm =T, 0:bins/bins)) ]
 # check if enrollment and exposure are correlated 
-l.model_1 <- lm(exp ~ frac_num + pop_adj, dt.census_edu_1980_2000[YEAR == 1980 ],weights=dt.census_edu_1980_2000[YEAR == 1980 ]$pop)
-l.model_2 <- lm(exp_growth ~ frac_num + pop_adj+ exp, dt.census_edu_1980_2000[YEAR == 1980],weights=dt.census_edu_1980_2000[YEAR == 1980 ]$pop_adj)
-l.model_3 <- lm(growth ~ frac_num + pop_adj+exp, dt.census_edu_1980_2000[!is.na(growth)& !is.na(quantile_exposure)],
+l.model_1 <- lm(exp ~ frac_num + pop, dt.census_edu_1980_2000[YEAR == 1980 ],weights=dt.census_edu_1980_2000[YEAR == 1980 ]$pop)
+l.model_2 <- lm(exp_growth ~ frac_num + pop+ exp, dt.census_edu_1980_2000[YEAR == 1980],weights=dt.census_edu_1980_2000[YEAR == 1980 ]$pop_adj)
+l.model_3 <- lm(growth ~ frac_num + pop+exp, dt.census_edu_1980_2000[!is.na(growth)& !is.na(quantile_exposure)],
                 weights=dt.census_edu_1980_2000[!is.na(growth)& !is.na(quantile_exposure)]$pop_adj)
-l.model_4 <- lm(w_growth ~ frac_num + pop_adj+exp, dt.census_edu_1980_2000[YEAR == 1980],weights=dt.census_edu_1980_2000[YEAR == 1980 ]$pop_adj)
-l.model_5 <- lm(col_growth ~ frac_num + pop_adj+exp, dt.census_edu_1980_2000[YEAR == 1980],weights=dt.census_edu_1980_2000[YEAR == 1980 ]$pop_adj)
+l.model_4 <- lm(w_growth ~ frac_num + pop+exp, dt.census_edu_1980_2000[YEAR == 1980],weights=dt.census_edu_1980_2000[YEAR == 1980 ]$pop_adj)
+l.model_5 <- lm(col_growth ~ frac_num + pop+exp, dt.census_edu_1980_2000[YEAR == 1980],weights=dt.census_edu_1980_2000[YEAR == 1980 ]$pop_adj)
 xtable(l.model_1, digits = 3)
 xtable(l.model_2, digits = 3)
 xtable(l.model_3, digits = 3)
 xtable(l.model_4, digits = 3)
 xtable(l.model_5, digits = 3)
+
