@@ -355,12 +355,14 @@ dt.col_deg_exp_8499 <- merge(dt.cty_wage_exp[YEAR == '1980'], dt.col_deg_8499, b
 dt.reg <- dt.col_deg_exp_8499[abs(comp_int)!=Inf & abs(total_int)!=Inf & abs(total_1980)!=Inf &  abs(comp_1980)!=Inf]
 dt.reg[,exp := (exp-mean(exp))/sd(exp)]
 # Run regressions
-l.model <- lm(comp_int ~ exp*comp_1980 + exp*total_1980, data = dt.reg )
+l.model <- lm(comp_int ~ exp*comp_1980, data = dt.reg )
+l.model_2 <- lm(comp_int ~ exp*comp_1980 + exp*total_1980, data = dt.reg )
 l.model_c <- lm(comp_int ~ exp*comp_1980+ age + w + frac_col + frac_man + frac_trans + frac_trade + frac_public + frac_young + frac_old, 
                 data = dt.reg )
 l.model_c2 <- lm(comp_int ~ exp*comp_1980+  frac_col + w + frac_man + frac_trans + frac_trade + frac_public + total_1980*exp, 
                  data = dt.reg )
 summary(l.model)
+summary(l.model_2)
 xtable(l.model)
 summary(l.model_c)
 xtable(l.model_c)
