@@ -1,15 +1,15 @@
 library(data.table)
 
 #################### Pull in ONET data  ########################
-dt.skills <- data.table(read.csv('~/Data/Onet_database/db_23_3_excel/Skills.csv')) 
-dt.abilities <- data.table(read.csv('~/Data/Onet_database/db_23_3_excel/Abilities.csv')) 
-dt.education <- data.table(read.csv('~/Data/Onet_database/db_23_3_excel/Education.csv')) 
-dt.knowledge <- data.table(read.csv('~/Data/Onet_database/db_23_3_excel/Knowledge.csv')) 
-dt.occupation <- data.table(read.csv('~/Data/Onet_database/db_23_3_excel/Occupation_Data.csv')) 
-dt.task_statements <- data.table(read.csv('~/Data/Onet_database/db_23_3_excel/Task_Statements.csv')) 
-dt.task_rat <- data.table(read.csv('~/Data/Onet_database/db_23_3_excel/Task_Ratings.csv')) 
-dt.tech_skills <- data.table(read.csv('~/Data/Onet_database/db_23_3_excel/Technology_Skills.csv')) 
-dt.tools <- data.table(read.csv('~/Data/Onet_database/db_23_3_excel/Tools_and_Technology.csv')) 
+dt.skills <- data.table(read.csv('~/Documents/Harvard/Research/College_Response/Data/Onet_database/db_23_3_excel/Skills.csv')) 
+dt.abilities <- data.table(read.csv('~/Documents/Harvard/Research/College_Response/Data/Onet_database/db_23_3_excel/Abilities.csv')) 
+dt.education <- data.table(read.csv('~/Documents/Harvard/Research/College_Response/Data/Onet_database/db_23_3_excel/Education.csv')) 
+dt.knowledge <- data.table(read.csv('~/Documents/Harvard/Research/College_Response/Data/Onet_database/db_23_3_excel/Knowledge.csv')) 
+dt.occupation <- data.table(read.csv('~/Documents/Harvard/Research/College_Response/Data/Onet_database/db_23_3_excel/Occupation_Data.csv')) 
+dt.task_statements <- data.table(read.csv('~/Documents/Harvard/Research/College_Response/Data/Onet_database/db_23_3_excel/Task_Statements.csv')) 
+dt.task_rat <- data.table(read.csv('~/Documents/Harvard/Research/College_Response/Data/Onet_database/db_23_3_excel/Task_Ratings.csv')) 
+dt.tech_skills <- data.table(read.csv('~/Documents/Harvard/Research/College_Response/Data/Onet_database/db_23_3_excel/Technology_Skills.csv')) 
+dt.tools <- data.table(read.csv('~/Documents/Harvard/Research/College_Response/Data/Onet_database/db_23_3_excel/Tools_and_Technology.csv')) 
 
 ################################## Step 1: Find key parameters ################################## 
 # unique(dt.skills$Element.Name)
