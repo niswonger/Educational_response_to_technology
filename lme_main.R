@@ -1,6 +1,9 @@
 library(readr)
 library(data.table)
 library(ggplot2)
+library(xtable)
+library(foreign)
+
 setwd('~/Documents/Harvard/Research/College_Response/Local_Market_Effect')
 fread("Data/ACS/usa_00026.csv", nrows = 1)
 # dt.census <- fread("Data/ACS/usa_00026.csv",
@@ -47,7 +50,7 @@ dt.wage_growth[,STEM_premium := mean_wage_STEM/mean_wage_not_STEM]
 ggplot(dt.wage_growth, aes(frac_emp_STEM,STEM_premium))+geom_point()+geom_smooth(method = 'lm')
 ggplot(dt.wage_growth, aes(wage_growth_STEM,STEM_premium))+geom_point()+geom_smooth(method = 'lm')
 # Get graduate age population 
-dt.major_choice <- dt.census[AGE %in% 22:26]
+dt.major_choice <- dt.census[AGE %in% 22:31]
 
 # Match staggered group and birthplace
 setnames(dt.wage_growth, 'STATEFIP','BPL')
@@ -62,11 +65,12 @@ dt.marjor_wage <- merge(dt.wage_growth_overall[,list(BPL = STATEFIP,group,wage_g
 # Run logit on likelihood of STEM degree
 dt.marjor_wage[,STEM := ed_type == 'STEM']
 model <- glm(STEM ~wage_growth_STEM_std*frac_emp_STEM_std + wage_growth_state + STEM_premium_std*frac_emp_STEM_std + factor(STATEFIP),
-             family=binomial(link='logit'),dt.marjor_wage[DEGFIELD !=0])
+             family=binomial(link='logit'),dt.marjor_wage[AGE %in% 22:26 & DEGFIELD !=0])
 summary(model)
 # Subset to movers
 model <- glm(STEM ~wage_growth_STEM_std*frac_emp_STEM_std + wage_growth_state + STEM_premium_std*frac_emp_STEM_std + factor(STATEFIP),
-             family=binomial(link='logit'),dt.marjor_wage[BPL!=STATEFIP & DEGFIELD !=0])
+             family=binomial(link='logit'),dt.marjor_wage[AGE %in% 22:26 & BPL!=STATEFIP & DEGFIELD !=0])
 summary(model)
-
+# Export to STATA for tables
+write.dta(dt.marjor_wage, "Data/Cleaned_Data/regressions.dta")
  
