@@ -12,7 +12,6 @@ setwd('~/Documents/Harvard/Research/College_Response/Local_Market_Effect')
 # saveRDS(dt.census_cty,'~/Documents/Harvard/Research/College_Response/Local_Market_Effect/Data/HERI/cty_exp.RDS')
 ################# Now get county level education data from Heri #############
 fread("Data/HERI/HERI.csv", nrows = 1)
-fread("~/Documents/Harvard/Research/College_Response/Data/Census/20190802_wide_data_from_1980_2000_census.csv", nrows = 1)
 # dt.heri <- fread("Data/HERI/HERI.csv",
 #                    select = c("SUBJID", "YEAR","ACERECODE","STUDSTAT","DOBYY","HOMEZIP","INCOME",
 #                               "FATHEDUC","MOTHEDUC","FULLSTAT","SATV","SATM","MAJORA","GOAL08", "DISTHOME","CHOOSE09"))
