@@ -7,8 +7,8 @@ setwd('~/Documents/Harvard/Research/College_Response/Local_Market_Effect')
 ################# Get CPS data #############
 fread("Data/Migration/CPS_migration_education_data.csv", nrows = 1)
 dt.cps <- fread("Data/Migration/CPS_migration_education_data.csv",
-                select = c("YEAR", 'SERIAL','CPSID','CPSIDP','PERNUM','HFLAG', 'STATEFIP','METAREA','COUNTY','ASECWT','EDUC','MIGRATE1','MIGSTA1'))
-dt.cps <- dt.cps[YEAR > 1985 & METAREA != 9999]
+                select = c("YEAR",'AGE' ,'SERIAL','CPSID','CPSIDP','PERNUM','HFLAG', 'STATEFIP','METAREA','COUNTY','ASECWT','EDUC','MIGRATE1','MIGSTA1'))
+dt.cps <- dt.cps[YEAR > 1985 & METAREA != 9999 & AGE >25 & AGE<65]
 # Test how often we see multiple entries and how they differ from the year before
 # dt.cps[, count := 1:.N, by = CPSIDP]
 # dt.cps_1 <- dt.cps[count ==1]
@@ -39,12 +39,11 @@ ggplot(dt.test, aes(YEAR,frac, color= as.factor(col), fill = high)) + geom_smoot
 ggplot(dt.mig_frac[YEAR!=1995], aes(YEAR,mig_frac)) + geom_point()
 
 ###### Look at State to State Migration #########
-
+# Choose quantile cutoff for skill level
+q <- .5
 dt.cps[MIGSTA1 != STATEFIP & MIGSTA1!= 99 & MIGSTA1!= 0 & MIGSTA1!= 91]
-
-
 dt.col_state <- dt.cps[,list(frac_col = sum((ed=='College')*ASECWT)/sum(ASECWT)),by = list(STATEFIP,YEAR)]
-dt.col_state[,high := ifelse(frac_col > median(frac_col), 'Skill Hub','Not'),by = YEAR]
+dt.col_state[,high := ifelse(frac_col > quantile(frac_col,q), 'Skill Hub','Not'),by = YEAR]
 # Merge the state college fraction to cps data for total population by STATEFIP and previous state
 dt.cps_state <- merge(dt.col_state[,list(STATEFIP,YEAR,sink = high)],dt.cps, by = c('STATEFIP','YEAR'))
 dt.cps_state <- merge(dt.col_state[,list(MIGSTA1 = STATEFIP,YEAR = YEAR -1,source = high)],dt.cps_state, by = c('MIGSTA1','YEAR'))
@@ -53,8 +52,14 @@ dt.test[,frac := V1/sum(V1), by = list(YEAR)]
 ggplot(dt.test, aes(YEAR,frac, color= source, shape = sink)) + geom_point() + geom_smooth(method = 'lm')
 ggplot(dt.test, aes(YEAR,frac, color= source, fill = sink)) + geom_smooth()
 ggplot(dt.test, aes(YEAR,frac, color= source, fill = sink)) + geom_smooth(method = 'lm')
-
-
+# Subset by own education level
+dt.cps_state <- merge(dt.col_state[,list(STATEFIP,YEAR,sink = high)],dt.cps, by = c('STATEFIP','YEAR'))
+dt.cps_state <- merge(dt.col_state[,list(MIGSTA1 = STATEFIP,YEAR = YEAR -1,source = high)],dt.cps_state, by = c('MIGSTA1','YEAR'))
+dt.test <- dt.cps_state[MIGSTA1 != STATEFIP & MIGSTA1!= 99 & MIGSTA1!= 0 & MIGSTA1!= 91,list(sum(ASECWT)), by = list(YEAR,source,sink,col)]
+dt.test[,frac := V1/sum(V1), by = list(YEAR,col)]
+ggplot(dt.test, aes(YEAR,frac, color= source, shape = sink)) + facet_grid(col~.) + geom_point() + geom_smooth(method = 'lm')
+ggplot(dt.test, aes(YEAR,frac, color= source, fill = sink)) + geom_smooth() + facet_grid(col~.) 
+ggplot(dt.test, aes(YEAR,frac, color= source, fill = sink)) + geom_smooth(method = 'lm') + facet_grid(col~.) 
 
 
 
