@@ -59,7 +59,14 @@ dt.test <- dt.cps_state[MIGSTA1 != STATEFIP & MIGSTA1!= 99 & MIGSTA1!= 0 & MIGST
 dt.test[,frac := V1/sum(V1), by = list(YEAR,col)]
 ggplot(dt.test, aes(YEAR,frac, color= source, shape = sink)) + facet_grid(col~.) + geom_point() + geom_smooth(method = 'lm')
 ggplot(dt.test, aes(YEAR,frac, color= source, fill = sink)) + geom_smooth() + facet_grid(col~.) 
-ggplot(dt.test, aes(YEAR,frac, color= source, fill = sink)) + geom_smooth(method = 'lm') + facet_grid(col~.) 
+# Key plot showing the change in hub to hub migrants by education
+ggplot(dt.test, aes(YEAR,frac, color= source, fill = sink)) + geom_smooth(method = 'lm') + facet_grid(col~.) +
+  theme_bw() + theme(panel.border = element_blank(), panel.grid.major = element_blank(),
+                     panel.grid.minor = element_blank(), axis.line = element_line(colour = "black"))
 
-
-
+dt.cps_state <- merge(dt.col_state[,list(STATEFIP,YEAR,sink = high)],dt.cps, by = c('STATEFIP','YEAR'))
+dt.cps_state <- merge(dt.col_state[,list(MIGSTA1 = STATEFIP,YEAR = YEAR -1,source = high)],dt.cps_state, by = c('MIGSTA1','YEAR'))
+dt.test <- dt.cps_state[MIGSTA1 != STATEFIP & MIGSTA1!= 99 & MIGSTA1!= 0 & MIGSTA1!= 91,list(sum(ASECWT)), by = list(YEAR,col)]
+dt.test[,frac := V1/sum(V1), by = list(YEAR)]
+ggplot(dt.test, aes(YEAR,frac, color= col)) + geom_smooth(method = 'lm') 
+  
