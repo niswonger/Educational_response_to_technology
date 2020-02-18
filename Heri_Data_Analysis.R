@@ -49,19 +49,61 @@ dt.ftft_cty_2 <- merge(dt.ftft_cty, dt.state[,list(Fips, STUSAB, state = STATE_N
 dt.ftft_cty_2[,fipscty := as.numeric(substr(county,nchar(county)-2 , nchar(county)))]
 # Get county level exposure
 dt.census_cty <- readRDS('Data/HERI/cty_exp.RDS')[YEAR == 1980, list(Fips,fipscty,exp,frac_col,emp,w)]
+# Normalize exposure
+dt.census_cty[,exp_norm := (exp - mean(exp))/sd(exp)]
 # Merge data 
 dt.cty <- merge(dt.ftft_cty_2,dt.census_cty, by = c('Fips','fipscty'))
-# Run logit on likelihood of STEM degree
-for(i in 1:4){
-dt.reg <- dt.cty[YEAR %in% (1980:1985 + (i-1)*5)]
-model <- glm(STEM ~ as.factor(inc) + as.factor(FATHEDUC) + w +  frac_col + exp,
+# Clear space in workspace for analysis
+rm(list=setdiff(ls(), "dt.cty"))
+# Run logit on likelihood of STEM degree using normalized exp
+dt.reg <- dt.cty[YEAR %in% 1980:2000]
+model <- glm(STEM ~ as.factor(inc) + as.factor(FATHEDUC) + w +  frac_col + exp_norm,
              family=binomial(link='logit'),dt.reg)
-if(i == 1){
-  coef_exp <- c(summary(model)$coefficients['exp',],1980+(i-1)*5)
-}else{
-  coef_exp <- rbind(coef_exp,c(summary(model)$coefficients['exp',],1980+(i-1)*5))
+summary(model)$coefficients['exp_norm',]
+
+# Run logit with county fixed effects
+dt.reg <- dt.cty[YEAR %in% 1980:2000]
+model <- glm(STEM ~ as.factor(inc) + as.factor(FATHEDUC) + w +  frac_col + exp_norm + as.factor(state),
+             family=binomial(link='logit'),dt.reg)
+summary(model)$coefficients['exp_norm',]
+
+# Run for those who say money is essential 
+dt.reg <- dt.cty[YEAR %in% 1980:2000 & GOAL08 == 'Essential']
+model <- glm(STEM ~ as.factor(inc) + as.factor(FATHEDUC) + w +  frac_col + exp_norm + as.factor(state),
+             family=binomial(link='logit'),dt.reg)
+summary(model)$coefficients['exp_norm',]
+
+# Run it for those who say money is not important
+dt.reg <- dt.cty[YEAR %in% 1980:2000 & GOAL08 == 'Not important']
+model <- glm(STEM ~ as.factor(inc) + as.factor(FATHEDUC) + w +  frac_col + exp_norm + as.factor(state),
+             family=binomial(link='logit'),dt.reg)
+summary(model)$coefficients['exp_norm',]
+
+# Run it for those who are a long distance from home
+dt.reg <- dt.cty[YEAR %in% 1980:2000  & (DISTHOME %in% c('More than 500',"101 to 500","51 to 100"))]
+model <- glm(STEM ~ as.factor(inc) + as.factor(FATHEDUC) + w +  frac_col + exp_norm + as.factor(state),
+             family=binomial(link='logit'),dt.reg)
+summary(model)$coefficients['exp_norm',]
+
+rm(list=setdiff(ls(), c("dt.cty")))
+# Get effect over time
+for(i in 1:4){
+  dt.reg <- dt.cty[YEAR %in% (1980:1985 + (i-1)*5)]
+  model <- glm(STEM ~ as.factor(inc) + as.factor(FATHEDUC) + w +  frac_col + exp_norm + as.factor(state),
+               family=binomial(link='logit'),dt.reg)
+  if(i == 1){
+    coef_exp <- c(summary(model)$coefficients['exp_norm',],1980+(i-1)*5)
+  }else{
+    coef_exp <- rbind(coef_exp,c(summary(model)$coefficients['exp_norm',],1980+(i-1)*5))
+  }
 }
-}
+
+# Plot coefficient over time
+ggplot(data.table(coef_exp), aes(V5, Estimate)) + geom_point() + 
+  geom_errorbar(aes(ymin=Estimate+2*`Std. Error`, ymax=Estimate-2*`Std. Error`)) + 
+  scale_x_continuous('YEAR') + geom_hline(position = 'identity', stat = 'hline',yintercept=0) + 
+  theme_bw() + theme(panel.border = element_blank(), panel.grid.major = element_blank(),
+                       panel.grid.minor = element_blank(), axis.line = element_line(colour = "black"))
 
 
 for(i in 1:4){
