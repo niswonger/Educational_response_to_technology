@@ -55,6 +55,7 @@ dt.census_cty[,exp_norm := (exp - mean(exp))/sd(exp)]
 dt.cty <- merge(dt.ftft_cty_2,dt.census_cty, by = c('Fips','fipscty'))
 # Clear space in workspace for analysis
 rm(list=setdiff(ls(), "dt.cty"))
+################# Run Basic Regressions ########
 # Run logit on likelihood of STEM degree using normalized exp
 dt.reg <- dt.cty[YEAR %in% 1980:2000]
 model <- glm(STEM ~ as.factor(inc) + as.factor(FATHEDUC) + w +  frac_col + exp_norm,
@@ -63,7 +64,7 @@ summary(model)$coefficients['exp_norm',]
 
 # Run logit with county fixed effects
 dt.reg <- dt.cty[YEAR %in% 1980:2000]
-model <- glm(STEM ~ as.factor(inc) + as.factor(FATHEDUC) + w +  frac_col + exp_norm + as.factor(state),
+model <- glm(STEM ~ as.factor(inc) + as.factor(FATHEDUC) + w +  frac_col + exp_norm + as.factor(state)+as.factor(YEAR),
              family=binomial(link='logit'),dt.reg)
 summary(model)$coefficients['exp_norm',]
 
@@ -85,6 +86,8 @@ model <- glm(STEM ~ as.factor(inc) + as.factor(FATHEDUC) + w +  frac_col + exp_n
              family=binomial(link='logit'),dt.reg)
 summary(model)$coefficients['exp_norm',]
 
+
+################# Get time effects #########
 rm(list=setdiff(ls(), c("dt.cty")))
 # Get effect over time
 for(i in 1:4){
