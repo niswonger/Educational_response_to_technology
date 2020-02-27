@@ -9,21 +9,22 @@ library(xtable)
 library(survey)
 library(AER)
 library(bit64)
+setwd('~/Documents/Harvard/Research/College_Response')
 ############################### Step 1: Get occupational exposure to computer #############################
 # Run script to generate dt.occ_exp which has occupational information and computer exposure 
-source('~/Scripts/response_to_tech_with_educational_constraints/getTechnologyExposure.R')
+source('Scripts/response_to_tech_with_educational_constraints/getTechnologyExposure.R')
 dt.occ_exp[order(tech_pred),list(Title, tech_pred)]
 ############################### Step 2: Match occupations from Census ######################################
 # Pull in Census data
-dt.census <- fread("~/Data/Census/20190802_wide_data_from_1980_2000_census.csv", 
+dt.census <- fread("Data/Census/20190802_wide_data_from_1980_2000_census.csv", 
                    select = c("YEAR","DATANUM","SERIAL", "PERNUM","PERWT","STATEFIP","COUNTYFIP","AGE","EDUC","EDUCD","EMPSTAT","OCC2010","IND","INCWAGE",
                               "INCTOT"))
 # Need to add consistent measure of industry to the original data
-dt.ind <- fread("~/Data/Census/20190807_Industry_Addendum.csv")
+dt.ind <- fread("Data/Census/20190807_industry_addendum.csv")
 dt.census <- merge(dt.ind[,list(YEAR,DATANUM,SERIAL,PERNUM,IND1990)], dt.census, by = c("YEAR","DATANUM","SERIAL", "PERNUM"))
 # Use crosswalks that will go from standardized OCC2010 variable in Census to ONET OCC-SOC codes with technology exposure variable
-dt.occ2010 <- data.table(read.csv('~/Data/Census/occupation_crosswalks/ACS_2010_OCC_2010_OCCSOC.csv'))[!(is.na(ACSOCC)|is.na(OCCSOC))]
-dt.ACS2010 <- data.table(read.csv('~/Data/Census/occupation_crosswalks/Occ2010_ACS_2010_OCC.csv'))[!(is.na(OCC2010)|is.na(ACSOCC))] 
+dt.occ2010 <- data.table(read.csv('Data/Census/occupation_crosswalks/ACS_2010_OCC_2010_OCCSOC.csv'))[!(is.na(ACSOCC)|is.na(OCCSOC))]
+dt.ACS2010 <- data.table(read.csv('Data/Census/occupation_crosswalks/Occ2010_ACS_2010_OCC.csv'))[!(is.na(OCC2010)|is.na(ACSOCC))] 
 dt.occACS <- merge(dt.occ2010,dt.ACS2010, by = 'ACSOCC', all = T)[!(is.na(ACSOCC) | is.na(OCCSOC))]
 
 dt.occ_exp[,OCCSOC := gsub('-','',as.character(substr(O.NET.SOC.Code,1,7))),]
@@ -49,13 +50,13 @@ dt.census_exp <- dt.census_exp[!is.na(tech_pred) & AGE >= 25 & AGE<=65]
 ################################ Step 3: Bring in College Data ################################## 
 
 # Pull in college major data 
-dt.ipeds_cat <- fread("~/Data/College_Info/IPEDS_completion_tables/c1980_a.csv")
+dt.ipeds_cat <- fread("Data/College_Info/IPEDS_completion_tables/c1980_a.csv")
 dt.ipeds_cat <- melt(dt.ipeds_cat[awlevel == 5, list(unitid, total_m = crace15, total_w = crace16, cip = cipcode)], 
                      id.vars = c('unitid','cip'),variable.name = 'cat',value.name = 'num')
 # Pull in college address data
-dt.college_zip <- fread("~/Data/College_Info/IPEDS_IC/hd1980.csv")[,list(unitid, zip, STUSAB = stabbr)]
+dt.college_zip <- fread("Data/College_Info/IPEDS_IC/hd1980.csv")[,list(unitid, zip, STUSAB = stabbr)]
 # Pull in the zip to county crosswalk
-dt.cty_zip <- data.table(read.csv('~/Data/Geography/geocorr_zip_county_mapping.csv'))
+dt.cty_zip <- data.table(read.csv('Data/Geography/geocorr_zip_county_mapping.csv'))
 dt.cty_zip <- dt.cty_zip[,list(ZIP = zcta5, county,STUSAB = stab  )]
 # merge to get the county for the college
 dt.college_cty <- merge(dt.college_zip[,list(unitid,ZIP = as.numeric(zip))],dt.cty_zip, by = 'ZIP' )
@@ -68,11 +69,11 @@ dt.ipeds_cat_cty[, num := num/cty_count]
 # Aggregate to county level enrollment
 dt.ipeds_cty <- dt.ipeds_cat_cty[,list(num = sum(num)), by = list(county, STUSAB,cip)]
 # Get FIP information
-dt.state <- data.table(read.csv('~/Data/Geography/state_fips.csv'))
+dt.state <- data.table(read.csv('Data/Geography/state_fips.csv'))
 dt.ipeds_cty <- merge(dt.ipeds_cty, dt.state[,list(fipstate = Fips, STUSAB, state = STATE_NAME)], by = 'STUSAB')
 dt.ipeds_cty[,fipscty := as.numeric(substr(county,nchar(county)-2 , nchar(county)))]
 # Bring in County Population data
-dt.cty_pop <- data.table(read.csv('~/Data/Geography/pop_1980.csv'))[type == 'A']
+dt.cty_pop <- data.table(read.csv('Data/Geography/pop_1980.csv'))[type == 'A']
 dt.cty_pop[,fipscty := as.numeric(substr(county,nchar(county)-2 , nchar(county)))]
 dt.cty_pop[,Fips := floor(as.numeric(county)/1000)]
 dt.cty_pop <- merge(dt.cty_pop, dt.state[,list(Fips, state = STATE_NAME)], by = 'Fips')
@@ -85,7 +86,7 @@ dt.cty[is.na(dt.cty)] <- 0
 dt.cty[,frac_num := num/pop]
 
 # Use the neighboring county files to get the total college enrollment per capita of the area
-dt.adj_cty <- data.table(read.csv('~/Data/Geography/census_adjacent_counties.csv'))[,list(county,county_adj)]
+dt.adj_cty <- data.table(read.csv('Data/Geography/census_adjacent_counties.csv'))[,list(county,county_adj)]
 dt.adj_cty[,fipscty := as.numeric(substr(county,nchar(county)-2 , nchar(county)))]
 dt.adj_cty[,Fips := as.numeric(substr(county,1,nchar(county)-3))]
 dt.adj_cty[,fipscty_adj := as.numeric(substr(county_adj,nchar(county_adj)-2 , nchar(county_adj)))]
