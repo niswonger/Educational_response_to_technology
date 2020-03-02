@@ -222,3 +222,39 @@ ggplot(data.table(coef_exp), aes(V5, Estimate)) + geom_point() +
   scale_x_continuous('YEAR') + geom_hline(yintercept=0) + 
   theme_bw() + theme(panel.border = element_blank(), panel.grid.major = element_blank(),
                        panel.grid.minor = element_blank(), axis.line = element_line(colour = "black"))
+########### Geography #########
+library(usmap)
+# Get county level exposure
+dt.census_cty <- unique(dt.cty[,list(fips=county,exp)])
+# Plot state exposure
+plot_usmap(regions = "counties", 
+           data = dt.census_cty
+           , values = "exp", lines = "black") +
+  scale_fill_continuous(low ="white", high = "red", name = "Computer Exposure (1980)") +
+  theme(legend.position = "right")
+# Produce some maps showing changes over time 
+dt.cty_map <- dt.cty[YEAR %in% 1980:2000]
+dt.cty_map <- dt.cty_map[,list(STEM = mean(STEM), pre_STEM = mean(pre_STEM)), by = list(group, fips = county)]
+dt.cty_map[,diffs := STEM - pre_STEM]
+plot_usmap(regions = "state", 
+           data = dt.cty_map[group==1990,list(fips,diffs)]
+           , values = "diffs", lines = "black") +
+  scale_fill_continuous(low ="white", high = "red", name = "Change in STEM") +
+  theme(legend.position = "right")
+
+# Show changes over time for different quantiles of exposure
+dt.dec_group <- dt.cty[,list(STEM = mean(STEM), pre_STEM = mean(pre_STEM), exp = mean(exp) ), 
+                       by = list(abv = decile > 5, group)][order(abv, group)]
+# dt.dec_group_sub <- dt.dec_group[decile%in% c(3,8)]
+dt.dec_group[,diffs:= STEM - pre_STEM]
+ggplot(dt.dec_group , aes(group,diffs, color = as.factor(abv))) + geom_point()+facet_grid(.~abv)
+dt.comp <- merge(dt.dec_group[abv == T,list(group,diffs)],dt.dec_group[abv == F,list(group,diffs)], by = 'group')
+dt.comp[,diff_diff:=diffs.x-diffs.y]
+ggplot(dt.comp , aes(group,diff_diff)) + geom_point()
+
+
+
+
+
+
+
