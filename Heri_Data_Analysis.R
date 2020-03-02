@@ -250,8 +250,7 @@ dt.dec_group[,diffs:= STEM - pre_STEM]
 ggplot(dt.dec_group , aes(group,diffs, color = as.factor(abv))) + geom_point()+facet_grid(.~abv)
 dt.comp <- merge(dt.dec_group[abv == T,list(group,diffs)],dt.dec_group[abv == F,list(group,diffs)], by = 'group')
 dt.comp[,diff_diff:=diffs.x-diffs.y]
-ggplot(dt.comp , aes(group,diff_diff)) + geom_point()
-
+ggplot(dt.comp , aes(group,diff_diff)) + geom_point()+xlab('YEAR') + ylab('Diff-in-Diff')
 
 
 
